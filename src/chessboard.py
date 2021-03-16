@@ -7,60 +7,110 @@ BLACK = 1
 WHITE = 2
 
 class Button:
-    def __init__(self, text, x, y, bg):
-        self.font = pygame.font.SysFont("Arial", 40)
+    def __init__(self, text, x, y):
+        """
+        initialisation of class button
+        :param text: string of the button name
+        :param x: position x of button
+        :param y: position y of button
+        :param bg: the color of button
+        """
+        self.font = pygame.font.SysFont("Arial", 30)
+        self.font.set_bold(True)  # 设置是否加粗
+        self.font.set_italic(True)
         self.x = x
         self.y = y
-        self.change_text(text, bg)
+        self.surface = self.font.render(text, True, pygame.Color("sandybrown"))
+        self.WIDTH = self.surface.get_width()
+        self.HEIGHT = self.surface.get_height()
 
-    def change_text(self, text, bg="black"):
-        self.text = self.font.render(text, 1, pygame.Color("white"))
-        self.size = self.text.get_size()
-        self.surface = pygame.Surface((self.size[0] + 130, self.size[1] + 10))
-        self.surface.fill(bg)
-        self.surface.blit(self.text, (65, 5))
-        self.rect = pygame.Rect(self.x, self.y, self.size[0] + 130, self.size[1] + 130)
+    def check_click(self, position):
+        x_match = position[0] > self.x and position[0] < self.x + self.WIDTH
+        y_match = position[1] > self.y and position[1] < self.y + self.HEIGHT
+
+        if x_match and y_match:
+            return True
+        else:
+            return False
 
 class Chess(object):
     def __init__(self):
+        """
+        initialisation of class Chess
+        """
+        ### initialisation of pygame
         pygame.init()
+        ### initialisation of chessboard
+        # the size of the edge
         self.space = 60
+        # the size of each cell
         self.cell_size = 40
+        # the number of all cells
         self.cell_num = 15
+        # the size of the whole chessboard
         self.grid_size = self.cell_size * (self.cell_num - 1) + self.space * 2
+        # the name of window
         self.title = pygame.display.set_caption('Gomoku')
+        # the settings of screen
         self.screen = pygame.display.set_mode((self.grid_size, self.grid_size))
+        # the font of screen
         self.font = pygame.font.SysFont("Arial", 20)
-        # chess grid position
+        ### chess grid position
         self.position= np.zeros((self.cell_num, self.cell_num, 2))
         self.board = np.zeros((self.cell_num, self.cell_num))
+        # the initial chess color is black
         self.chess_color = "black"
+        # a binary variable indicate the chess color is black or not
         self.is_black = True
         # background image
         self.bg_path = "../img/background.jpg"
         # create buttons
-        self.btn_start = Button("Start", x = 200, y = 80, bg="sandybrown")
-        self.btn_exit = Button("Exit", x = 450, y = 80, bg="sandybrown")
+        self.btn_start = Button("Start", x = 200, y = 80)
+        self.btn_startWithTimer = Button("Start with Timer", x = 320, y = 80)
+        self.btn_exit = Button("Exit", x = 580, y = 80)
 
     def btnStart_click(self, event):
+        """
+        start the game when users click the button Start
+        :param event: if users click the button Start then event occurs
+        """
         x, y = pygame.mouse.get_pos()
         if event.type == pygame.MOUSEBUTTONDOWN:
             if pygame.mouse.get_pressed()[0]:
-                if self.btn_start.rect.collidepoint(x, y):
+                if self.btn_start.check_click([x, y]):
+                    self.draw()
+
+    def btnStartWithTimer_click(self, event):
+        """
+        start the game with timer when users click the button StartWithTimer
+        :param event: if users click the button Start then event occurs
+        """
+        x, y = pygame.mouse.get_pos()
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            if pygame.mouse.get_pressed()[0]:
+                if self.btn_startWithTimer.check_click([x, y]):
                     self.draw()
 
     def btnExit_click(self, event):
+        """
+        exit the game when users click the button Exit
+        :param event: if users click the button Exit then event occurs
+        """
         x, y = pygame.mouse.get_pos()
         if event.type == pygame.MOUSEBUTTONDOWN:
             if pygame.mouse.get_pressed()[0]:
-                if self.btn_exit.rect.collidepoint(x, y):
+                if self.btn_exit.check_click([x, y]):
                     pygame.quit()
 
     def load_bg(self):
+        """
+        load the background picture
+        """
         while True:
             bg_img = pygame.transform.scale(pygame.image.load(self.bg_path), (self.grid_size, self.grid_size))
             self.screen.blit(bg_img, (0, 0))
             self.screen.blit(self.btn_start.surface, (self.btn_start.x, self.btn_start.y))
+            self.screen.blit(self.btn_startWithTimer.surface, (self.btn_startWithTimer.x, self.btn_startWithTimer.y))
             self.screen.blit(self.btn_exit.surface, (self.btn_exit.x, self.btn_exit.y))
             pygame.display.update()
 
@@ -69,9 +119,13 @@ class Chess(object):
                     pygame.quit()
                     exit()
                 self.btnStart_click(event)
+                self.btnStartWithTimer_click(event)
                 self.btnExit_click(event)
 
     def draw(self):
+        """
+        create the chessboard and draw the chess
+        """
         # background color
         self.screen.fill("peachpuff")
 
@@ -118,6 +172,11 @@ class Chess(object):
                         pygame.display.update()
 
     def play(self, row, col):
+        """
+        change the color of chess and judge if user is win
+        :param row: the number of row
+        :param col: the number of column
+        """
         if self.is_black:
             self.is_black = False
             self.chess_color = "white"
@@ -129,10 +188,16 @@ class Chess(object):
         if not self.is_win():
             pass
         else:
-            print(self.is_win())
+            gameover_font = pygame.font.SysFont("Arial", 60)
+            gameover_text = gameover_font.render("Game Over, " + self.is_win(), True, (255, 0, 0))
+            self.screen.blit(gameover_text, (
+                round(self.grid_size / 2 - gameover_text.get_width() / 2), round(self.grid_size / 2 - gameover_text.get_height() / 2)))
             # running = False
 
     def is_win(self):
+        """
+        judge each color of user wins
+        """
         for c in range(self.cell_num):
             for r in range(self.cell_num):
                 if r < self.cell_num - 4 and self.board[r][c] ==  self.board[r + 1][c] ==  self.board[r + 2][c] == \
@@ -159,7 +224,6 @@ class Chess(object):
                 elif r > 3 and c < self.cell_num - 4 and self.board[r][c] == self.board[r - 1][c + 1] == \
                         self.board[r - 2][c + 2] == self.board[r - 3][c + 3] == self.board[r - 4][c + 4] == WHITE:
                     return "White win!"
-        return False
 
 if __name__ == '__main__':
     chess = Chess()
