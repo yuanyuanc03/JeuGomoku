@@ -2,8 +2,6 @@ import pygame
 import numpy as np
 
 # define global variable of pieces' color
-from pygame.tests.draw_test import GREEN
-
 EMPTY = 0
 BLACK = 1
 WHITE = 2
@@ -28,8 +26,8 @@ class Button:
     def check_click(self, position):
         """
         judge if user click the button
-        :param position:
-        :return:
+        :param position: the mouseclick position
+        :return: if click the button return True; else return False
         """
         x_match = position[0] > self.x and position[0] < self.x + self.WIDTH
         y_match = position[1] > self.y and position[1] < self.y + self.HEIGHT
@@ -78,7 +76,7 @@ class Chess(object):
         self.btn_back = Button("Back", x = 540, y = 15)
 
         ### set timer
-        self.counts = 10
+        self.counts = 300
         self.COUNT = pygame.USEREVENT + 1
         pygame.time.set_timer(self.COUNT, 1000)
         self.text = "Timer"
@@ -100,7 +98,7 @@ class Chess(object):
     def btnStartWithTimer_click(self, event):
         """
         start the game with timer when users click the button StartWithTimer
-        :param event: if users click the button Start then event occurs
+        :param event: if users click the button StartWithTimer then event occurs
         """
         x, y = pygame.mouse.get_pos()
         if event.type == pygame.MOUSEBUTTONDOWN:
@@ -134,7 +132,7 @@ class Chess(object):
                     self.is_black = True
                     self.is_gameOver = False
                     if (timer):
-                        self.counts = 10
+                        self.counts = 300
                     self.draw(timer)
 
     def btnBack_click(self, event):
@@ -165,7 +163,6 @@ class Chess(object):
         text_font.set_italic(True)
         self.text = text_font.render(text, True, "sandybrown", "peachpuff")
         self.screen.blit(self.text, (x, y))
-        # self.screen.blit(self.screen, (0, 0))
         pygame.display.update()
 
     def load_bg(self):
@@ -201,6 +198,7 @@ class Chess(object):
                 self.position[row][col][0] = self.cell_size * row + self.space
                 self.position[row][col][1] = self.cell_size * col + self.space
 
+        # draw chessboard
         for x in range(0, self.cell_size * self.cell_num, self.cell_size):
             pygame.draw.line(self.screen, "black", (x + self.space, 0 + self.space),
                              (x + self.space, self.cell_size * (self.cell_num - 1) + self.space), 1)
@@ -208,6 +206,7 @@ class Chess(object):
             pygame.draw.line(self.screen, "black", (0 + self.space, y + self.space),
                              (self.cell_size * (self.cell_num - 1) + self.space, y + self.space), 1)
 
+        # draw intersection point in the chessboard
         pygame.draw.circle(self.screen, "black", (self.cell_size * 3 + self.space, self.cell_size * 3 + self.space),
                            5)
         pygame.draw.circle(self.screen, "black",
@@ -220,6 +219,7 @@ class Chess(object):
                            5)
         pygame.display.update()
 
+        # listen to the pygame's event
         while True:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -248,12 +248,17 @@ class Chess(object):
                 self.btnBack_click(event)
 
     def gameOver(self, text):
+        """
+        if game over, show the text in the screen
+        :param text: string of text
+        """
         gameover_font = pygame.font.SysFont("Arial", 60)
         gameover_font.set_italic(True)
         gameover_text = gameover_font.render("Game Over, " + text, True, "sandybrown")
         self.screen.blit(gameover_text, (
             round(self.grid_size / 2 - gameover_text.get_width() / 2),
             round(self.grid_size / 2 - gameover_text.get_height() / 2)))
+        # if game over, is_gameOver = True
         self.is_gameOver = True
 
     def play(self, row, col):
@@ -305,7 +310,7 @@ class Chess(object):
                 elif r > 3 and c < self.cell_num - 4 and self.board[r][c] == self.board[r - 1][c + 1] == \
                         self.board[r - 2][c + 2] == self.board[r - 3][c + 3] == self.board[r - 4][c + 4] == WHITE:
                     return "White win!"
-
+        # if the game doesn't finish, return False
         return False
 
 if __name__ == '__main__':
