@@ -1,3 +1,5 @@
+from PIL import Image
+
 import pygame
 import numpy as np
 
@@ -19,7 +21,10 @@ class Button:
         self.font.set_italic(True)
         self.x = x
         self.y = y
-        self.surface = self.font.render(text, True, pygame.Color("sandybrown"))
+        if(isinstance(text, str)):
+            self.surface = self.font.render(text, True, pygame.Color("goldenrod"))
+        else:
+            self.surface = text
         self.WIDTH = self.surface.get_width()
         self.HEIGHT = self.surface.get_height()
 
@@ -46,7 +51,7 @@ class Chess(object):
         pygame.init()
         ### initialisation of chessboard
         # the size of the edge
-        self.space = 60
+        self.space = 80
         # the size of each cell
         self.cell_size = 40
         # the number of all cells
@@ -72,14 +77,28 @@ class Chess(object):
         self.btn_start = Button("Start", x = 200, y = 80)
         self.btn_startWithTimer = Button("Start with Timer", x = 320, y = 80)
         self.btn_exit = Button("Exit", x = 580, y = 80)
-        self.btn_restart = Button("Restart", x = 400, y = 15)
-        self.btn_back = Button("Back", x = 540, y = 15)
+        self.btn_restart = Button("Restart", x = 420, y = 15)
+        self.btn_back = Button("Back", x = 560, y = 15)
+        # im = Image.open("../img/music2.png")
+        # imgpro  = im.resize((40, 40))
+        # imgpro.save("../img/music2_resized.png", 'PNG')
+        self.imageMusic = pygame.image.load("../img/music2_resized.png").convert_alpha()
+        self.btn_music = Button(self.imageMusic, x = 90, y = 15)
 
         ### set timer
         self.counts = 300
         self.COUNT = pygame.USEREVENT + 1
         pygame.time.set_timer(self.COUNT, 1000)
         self.text = "Timer"
+
+        self.music_path = "../music/music.mp3"
+        # initialise the mixer module
+        pygame.mixer.init()
+        # load music file
+        pygame.mixer.music.load(self.music_path)
+        # play music
+        pygame.mixer.music.play()
+        self.is_playMusic = True
 
         # if gameover
         self.is_gameOver = False
@@ -151,6 +170,22 @@ class Chess(object):
                     self.is_gameOver = False
                     self.load_bg()
 
+    def btnMusic_click(self, event):
+        """
+        play music
+        :param event: if users click the button Music then event occurs
+        """
+        x, y = pygame.mouse.get_pos()
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            if pygame.mouse.get_pressed()[0]:
+                if self.btn_music.check_click([x, y]):
+                    if self.is_playMusic:
+                        pygame.mixer.music.stop()
+                        self.is_playMusic = False
+                    else:
+                        pygame.mixer.music.play()
+                        self.is_playMusic = True
+
     def showText(self, text, x, y):
         """
         show text in the screen
@@ -161,7 +196,9 @@ class Chess(object):
         text_font = pygame.font.SysFont("Arial", 25)
         text_font.set_bold(True)
         text_font.set_italic(True)
-        self.text = text_font.render(text, True, "sandybrown", "peachpuff")
+        self.text = text_font.render("                 ", True, "goldenrod", "peachpuff")
+        self.screen.blit(self.text, (x, y))
+        self.text = text_font.render(text, True, "goldenrod", "peachpuff")
         self.screen.blit(self.text, (x, y))
         pygame.display.update()
 
@@ -192,6 +229,7 @@ class Chess(object):
         self.screen.fill("peachpuff")
         self.screen.blit(self.btn_restart.surface, (self.btn_restart.x, self.btn_restart.y))
         self.screen.blit(self.btn_back.surface, (self.btn_back.x, self.btn_back.y))
+        self.screen.blit(self.btn_music.surface, (self.btn_music.x, self.btn_music.y))
 
         for row in range(0, self.cell_num):
             for col in range(0, self.cell_num):
@@ -235,15 +273,17 @@ class Chess(object):
 
                 elif event.type == pygame.MOUSEBUTTONDOWN and not self.is_gameOver:
                     x, y = event.pos
-                    row = round((x - chess.space) / chess.cell_size)
-                    col = round((y - chess.space) / chess.cell_size)
-                    if (self.board[row][col] == EMPTY):
-                        pygame.draw.circle(self.screen, self.chess_color,
-                                           (self.position[row][col][0], self.position[row][col][1]), 18)
-                        self.play(row, col)
-                        self.screen.blit(self.screen, (0, 0))
-                        pygame.display.update()
+                    if(x >= 70 and x <= 650 and y >= 70 and y <= 650):
+                        row = round((x - chess.space) / chess.cell_size)
+                        col = round((y - chess.space) / chess.cell_size)
+                        if (self.board[row][col] == EMPTY):
+                            pygame.draw.circle(self.screen, self.chess_color,
+                                               (self.position[row][col][0], self.position[row][col][1]), 18)
+                            self.play(row, col)
+                            self.screen.blit(self.screen, (0, 0))
+                            pygame.display.update()
 
+                self.btnMusic_click(event)
                 self.btnRestart_click(event, timer)
                 self.btnBack_click(event)
 
