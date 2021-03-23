@@ -150,6 +150,8 @@ class Chess(object):
                     self.chess_color = "black"
                     self.is_black = True
                     self.is_gameOver = False
+                    if not self.is_playMusic:
+                        self.is_playMusic = True
                     if (timer):
                         self.counts = 300
                     self.draw(timer)
@@ -179,7 +181,7 @@ class Chess(object):
         if event.type == pygame.MOUSEBUTTONDOWN:
             if pygame.mouse.get_pressed()[0]:
                 if self.btn_music.check_click([x, y]):
-                    if self.is_playMusic:
+                    if pygame.mixer.music.get_busy():
                         pygame.mixer.music.stop()
                         self.is_playMusic = False
                     else:
@@ -286,6 +288,10 @@ class Chess(object):
                 self.btnMusic_click(event)
                 self.btnRestart_click(event, timer)
                 self.btnBack_click(event)
+
+                if not pygame.mixer.music.get_busy():
+                    if self.is_playMusic:
+                        pygame.mixer.music.play()
 
     def gameOver(self, text):
         """
